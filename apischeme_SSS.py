@@ -38,8 +38,10 @@ def get_hive_ips():
 
 
 def get_bastion_ips():
-    bastion_ip_str = os.getenv("ALLOWED_CIDR_BLOCKS", [])
-    bastion_ips = bastion_ip_str.split(",")
+    selectorsyncsets = dyn_client.resources.get(api_version='hive.openshift.io/v1', kind='SelectorSyncSet')
+    apischeme_sss = selectorsyncsets.get(name='cloud-ingress-operator-apischeme')
+    bastion_ips = apischeme_sss.get().metadata.annotations.allowedCIDRBlocks
+
     if len(bastion_ips) == 0:
         print("not enough bastion ips")
         sys.exit(1)
