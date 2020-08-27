@@ -54,13 +54,8 @@ def get_bastion_ips(resource):
     return bastion_ips
 
 
-def _manage_ips(ips, operation):
-    """ Submit a request to add/remove entries to/from app-interface """
-    allowed_operations = ['add', 'remove']
-    if operation not in allowed_operations:
-        print("operation is not allowed")
-        sys.exit(1)
-
+def add_missing_ips(missing_ips):
+    """ Submit a request to add the missing entries to app-interface """
     aws_access_key_id = os.environ['aws_access_key_id']
     aws_secret_access_key = os.environ['aws_secret_access_key']
     aws_region = os.environ['aws_region']
@@ -74,23 +69,12 @@ def _manage_ips(ips, operation):
     sqs = session.client('sqs')
     body = {
         'pr_type': 'create_cloud_ingress_operator_cidr_blocks_mr',
-        'cidr_blocks': list(ips),
-        'operation': operation
+        'cidr_blocks': list(missing_ips)
     }
     sqs.send_message(
         QueueUrl=queue_url,
         MessageBody=json.dumps(body)
     )
-
-
-def add_ips(ips):
-    """ Submit a request to add entries to app-interface """
-    _manage_ips(ips, operation='add')
-
-
-def remove_ips(ips):
-    """ Submit a request to remove entries from app-interface """
-    _manage_ips(ips, operation='remove')
 
 
 sss = get_sss()
@@ -122,4 +106,4 @@ if not missing_ips:
     print("No IPs to add, no-op")
     sys.exit(0)
 
-add_ips(missing_ips)
+add_missing_ips(missing_ips)
